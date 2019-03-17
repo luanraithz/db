@@ -12,4 +12,7 @@
   * Pager
   * OS Interface
 
+### Statements
+Non-SQL statements link `.exit` are called "meta-commands". They all start with a dot.
 
+In our code, the `virtual_machine` will be called as `execute_statement`.
