@@ -17,6 +17,7 @@ int main(int argc, char* argv[])
         read_input(input_buffer);
         if (input_buffer->buffer[0] == '.')
         {
+            
             // `do_meta_command` may run the function `exit` if the input_buffer is ".exit"
             switch(do_meta_command(input_buffer))
             {
