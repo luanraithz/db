@@ -2,13 +2,12 @@
 #define INPUT_FUNCTIONS_H
 
 #include <stdio.h>
-struct InputBuffer_t {
+
+typedef struct {
    char* buffer;
    size_t buffer_length;
    ssize_t input_length;
-};
-
-typedef struct InputBuffer_t InputBuffer;
+} InputBuffer;
 
 InputBuffer* new_input_buffer()
 {
@@ -36,6 +35,6 @@ void read_input(InputBuffer* input_buffer)
     // Ignore trailing newline
     input_buffer->input_length = bytes_read - 1;
     input_buffer->buffer[bytes_read - 1] = 0;
-}
+};
 
 #endif

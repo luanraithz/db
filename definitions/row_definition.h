@@ -8,8 +8,8 @@
 
 typedef struct {
 	uint32_t id;
-	char username[COLUMN_USERNAME_SIZE];
-	char email[COLUMN_EMAIL_SIZE];
+	char username[COLUMN_USERNAME_SIZE + 1];
+	char email[COLUMN_EMAIL_SIZE + 1];
 } Row;
 
 /*   Not sure if it's ugly or very ugly to do it,
@@ -36,7 +36,7 @@ typedef struct {
  *    https://www.tutorialspoint.com/c_standard_library/c_function_memcpy.htm
  */
 
-void sirialize_row(Row* source, void* destination)
+void serialize_row(Row* source, void* destination)
 {
 	memcpy(destination + ID_OFFSET, &(source->id), ID_SIZE);
 	memcpy(destination + USERNAME_OFFSET, &(source->username), USERNAME_SIZE);
@@ -50,5 +50,9 @@ void deserialize_row(void* source, Row* destination)
 	memcpy(&(destination->email), source + EMAIL_OFFSET, EMAIL_SIZE);
 }
 
+void print_row(Row* row)
+{
+	printf("(%d, %s, %s)\n", row->id, row->username, row->email);
+}
 
 #endif

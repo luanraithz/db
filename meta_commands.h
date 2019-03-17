@@ -4,15 +4,17 @@
 
 #include "input_functions.h"
 
+int is_meta_command(InputBuffer* buffer);
+
 typedef enum {
 	META_COMMAND_SUCCESS,
 	META_COMMAND_UNRECOGNIZED_COMMAND
-} MetdaCommandResult;
+} MetaCommandResult;
 
 /*
 	Meta commands are the ones that start with an ".", like: ".exit"
 */
-MetdaCommandResult do_meta_command(InputBuffer* input_buffer)
+MetaCommandResult do_meta_command(InputBuffer* input_buffer)
 {
 	if (strcmp(input_buffer->buffer, ".exit") == 0)
 	{
@@ -20,6 +22,10 @@ MetdaCommandResult do_meta_command(InputBuffer* input_buffer)
 	} else {
 		return META_COMMAND_UNRECOGNIZED_COMMAND;
 	}
+}
+
+int is_meta_command(InputBuffer* input_buffer) {
+	return input_buffer->buffer[0] == '.';
 }
 
 #endif
