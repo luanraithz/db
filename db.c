@@ -11,7 +11,8 @@
 
 int main(int argc, char* argv[])
 {
-    Table* table = new_table();
+    Table* table = db_open(argc < 2 ? "defaultdb.db" : argv[1]);
+
     InputBuffer* input_buffer = new_input_buffer();
 
     while(true)
@@ -21,7 +22,7 @@ int main(int argc, char* argv[])
         if (is_meta_command(input_buffer))
         {
             // `do_meta_command` may run the function `exit` if the input_buffer is ".exit"
-            switch(do_meta_command(input_buffer))
+            switch(do_meta_command(input_buffer, table))
             {
                 case (META_COMMAND_SUCCESS):
                     continue;

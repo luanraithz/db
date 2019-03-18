@@ -56,7 +56,7 @@ QuerySyntaxStatus validate_query(InputBuffer *input_buffer, Statement* statement
 	if (id < 0) {
 		return QUERY_INVALID_ID;
 	}
-	if (strlen(username) > COLUMN_USERNAME_SIZE || strlen(email) > COLUMN_USERNAME_SIZE)
+	if (strlen(username) > COLUMN_USERNAME_SIZE || strlen(email) > COLUMN_EMAIL_SIZE)
 	{
 		return QUERY_FIELD_TO_LONG;
 	}
