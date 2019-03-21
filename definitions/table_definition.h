@@ -4,6 +4,8 @@
 #include <errno.h>
 #include <stdint.h>
 #include <unistd.h>
+
+#include "b-tree.h"
 #include "row_definition.h"
 
 #define TABLE_DEFINITION_H
@@ -29,6 +31,7 @@ typedef struct {
 	uint32_t row_num;
 	bool end_of_table;
 } Cursor;
+
 
 Pager* pager_open(const char* filename);
 
