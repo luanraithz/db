@@ -24,6 +24,11 @@ typedef struct {
 	uint32_t num_rows;
 } Table;
 
+typedef struct {
+	Table* table;
+	uint32_t row_num;
+	bool end_of_table;
+} Cursor;
 
 Pager* pager_open(const char* filename);
 
@@ -33,15 +38,24 @@ void db_close(Table* table);
 
 void pager_flush(Pager* pager, uint32_t page_num, uint32_t size);
 
-void* row_slot(Table* table, uint32_t row_num)
+void* cursor_value(Cursor* cursor)
 {
+	uint32_t row_num = cursor->row_num;
 	uint32_t page_num = row_num / ROWS_PER_PAGE;
-	void* page = get_page(table->pager, page_num);
+	void* page = get_page(cursor->table->pager, page_num);
 	uint32_t row_offset = row_num % ROWS_PER_PAGE;
 	uint32_t byte_offset = row_offset * ROW_SIZE;
 	return page + byte_offset;
 }
 
+void cursor_advance(Cursor* cursor)
+{
+	cursor->row_num += 1;
+	if (cursor->row_num >= cursor->table->num_rows)
+	{
+		cursor->end_of_table = true;
+	}
+}
 Table* db_open(const char* filename)
 {
 	Pager* pager = pager_open(filename);
@@ -52,6 +66,7 @@ Table* db_open(const char* filename)
 	table->num_rows = num_rows;
 	return table;
 }
+
 
 void db_close(Table* table)
 {
@@ -134,7 +149,8 @@ void pager_flush(Pager* pager, uint32_t page_num, uint32_t size)
 }
 
 
-void* get_page(Pager* pager, uint32_t page_num) {
+void* get_page(Pager* pager, uint32_t page_num)
+{
 	if (page_num > TABLE_MAX_PAGES)
 	{
 		printf("Tried to fetch page number out of bounds, %d.\n", TABLE_MAX_PAGES);
@@ -166,6 +182,25 @@ void* get_page(Pager* pager, uint32_t page_num) {
 		pager->pages[page_num] = page;
 	}
 	return pager->pages[page_num];
+}
+
+Cursor* table_start(Table* table)
+{
+	Cursor* cursor = malloc(sizeof(Cursor));
+	cursor->table = table;
+	cursor->row_num = 0;
+	cursor->end_of_table = (table->num_rows == 0);
+	return cursor;	
+}
+
+Cursor* table_end(Table* table)
+{
+	Cursor* cursor = malloc(sizeof(Cursor));
+	cursor->table = table;
+	cursor->row_num = table->num_rows;
+	cursor->end_of_table = true;
+
+	return cursor;
 }
 
 
