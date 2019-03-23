@@ -1,14 +1,12 @@
 #ifndef TABLE_DEFINITION_H
 
+#define TABLE_DEFINITION_H
+
 #include <fcntl.h>
 #include <errno.h>
 #include <stdint.h>
 #include <unistd.h>
 
-#include "b-tree.h"
-#include "row_definition.h"
-
-#define TABLE_DEFINITION_H
 
 #define PAGE_SIZE 4096
 #define TABLE_MAX_PAGES 100
@@ -33,6 +31,8 @@ typedef struct {
   bool end_of_table;
 } Cursor;
 
+#include "row_definition.h"
+#include "b-tree.h"
 
 Pager* pager_open(const char* filename);
 
@@ -46,17 +46,22 @@ void* cursor_value(Cursor* cursor)
 {
   uint32_t page_num = cursor->page_num;
   void* page = get_page(cursor->table->pager, page_num);
+
   return leaf_node_value(page, cursor->cell_num);
 }
 
 void cursor_advance(Cursor* cursor)
 {
-  cursor->row_num += 1;
-  if (cursor->row_num >= cursor->table->num_rows)
+  uint32_t page_num = cursor->page_num;
+  void* node = get_page(cursor->table->pager, page_num);
+
+  cursor->cell_num += 1;
+  if (cursor->cell_num >= *(leaf_node_num_cells(node)))
   {
     cursor->end_of_table = true;
   }
 }
+
 Table* db_open(const char* filename)
 {
   Pager* pager = pager_open(filename);
@@ -115,7 +120,6 @@ Pager* pager_open(const char* filename)
   pager->file_descriptor = fd;
   pager->file_length = file_length;
   pager->num_pages = file_length / PAGE_SIZE;
-
   if ( file_length % PAGE_SIZE != 0)
   {
     printf("DB file is not a whole number of pages. Corrupt file.\n");
@@ -203,7 +207,7 @@ Cursor* table_start(Table* table)
 
   void* root_node = get_page(table->pager, table->root_page_num);
   uint32_t num_cells = *leaf_node_num_cells(root_node);
-  cursor->end_of_table = table->num_rows == 0;
+  cursor->end_of_table = num_cells == 0;
   return cursor;
 }
 
@@ -220,6 +224,45 @@ Cursor* table_end(Table* table)
   return cursor;
 }
 
+void print_constants() {
+  printf("ROW_SIZE: %ld\n", ROW_SIZE);
+  printf("COMMON_NODE_HEADER_SIZE: %ld\n", COMMON_NODE_HEADER_SIZE);
+  printf("LEAF_NODE_HEADER_SIZE: %ld\n", LEAF_NODE_HEADER_SIZE);
+  printf("LEAF_NODE_CELL_SIZE: %ld\n", LEAF_NODE_CELL_SIZE);
+  printf("LEAF_NODE_SPACE_FOR_CELLS: %ld\n", LEAF_NODE_SPACE_FOR_CELLS);
+  printf("LEAF_NODE_MAX_CELLS: %ld\n", LEAF_NODE_MAX_CELLS);
+}
 
+void leaf_node_insert(Cursor* cursor, uint32_t key, Row* value)
+{
+  void* node = get_page(cursor->table->pager, cursor->page_num);
+ 
+  uint32_t num_cells = *leaf_node_num_cells(node);
+
+  if ( num_cells >= LEAF_NODE_MAX_CELLS )
+  {
+    // Node full
+    printf("Need to implement splitting a leaf node. \n");
+    exit(EXIT_FAILURE);
+  }
+
+  printf("almost there %d\n", num_cells);
+  if (cursor->cell_num < num_cells)
+  {
+    // Make room for new cell
+    printf("Make room");
+    for (uint32_t i = num_cells; i > cursor->cell_num; i--)
+    {
+      memcpy(leaf_node_cell(node, i), leaf_node_cell(node, i - 1), LEAF_NODE_CELL_SIZE);
+    }
+
+    *(leaf_node_num_cells(node)) += 1;
+    *(leaf_node_key(node, cursor->cell_num)) = key;
+
+    serialize_row(value, leaf_node_value(node, cursor-> cell_num));
+
+  }
+
+}
 
 #endif
