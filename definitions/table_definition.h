@@ -269,7 +269,7 @@ void print_leaf_node(void* node)
   for (uint32_t i = 0; i < num_cells; i++)
   {
     uint32_t key = *leaf_node_key(node, i);
-    printf(" - %d: %d", i, key);
+    printf(" - %d : %d\n", i, key);
   }
 }
 
