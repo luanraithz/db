@@ -38,9 +38,7 @@ ExecuteResult execute_insert(Statement* statement, Table* table)
   }
   Row* row_to_insert = &(statement->row_to_insert);
 
-  // Works until here
   Cursor* cursor = table_end(table);
-  printf("%d %s %s\n", row_to_insert->id, row_to_insert->username, row_to_insert->email );
   leaf_node_insert(cursor, row_to_insert->id, row_to_insert);
   free(cursor);
 
@@ -51,7 +49,6 @@ ExecuteResult execute_select(Statement* statement, Table* table)
 {
   Row row;
   Cursor* cursor = table_start(table);
-  printf("%d \n", cursor->end_of_table);
   while(!(cursor->end_of_table))
   {
     deserialize_row( cursor_value(cursor), &row);

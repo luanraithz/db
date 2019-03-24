@@ -21,7 +21,6 @@ typedef struct {
 typedef struct {
   Pager* pager;
   uint32_t root_page_num;
-  uint32_t num_pages;
 } Table;
 
 typedef struct {
@@ -56,7 +55,7 @@ void cursor_advance(Cursor* cursor)
   void* node = get_page(cursor->table->pager, page_num);
 
   cursor->cell_num += 1;
-  if (cursor->cell_num >= *(leaf_node_num_cells(node)))
+  if (cursor->cell_num >= (*leaf_node_num_cells(node)))
   {
     cursor->end_of_table = true;
   }
@@ -120,6 +119,7 @@ Pager* pager_open(const char* filename)
   pager->file_descriptor = fd;
   pager->file_length = file_length;
   pager->num_pages = file_length / PAGE_SIZE;
+
   if ( file_length % PAGE_SIZE != 0)
   {
     printf("DB file is not a whole number of pages. Corrupt file.\n");
@@ -149,7 +149,6 @@ void pager_flush(Pager* pager, uint32_t page_num)
   }
   
   ssize_t bytes_written = write(pager->file_descriptor, pager->pages[page_num], PAGE_SIZE);
-
   if (bytes_written == -1)
   {
     printf("Error writing: %d\n", errno);
@@ -216,6 +215,7 @@ Cursor* table_end(Table* table)
   Cursor* cursor = malloc(sizeof(Cursor));
   cursor->table = table;
   cursor->page_num = table->root_page_num;
+
   void* root_node = get_page(table->pager, table->root_page_num);
   uint32_t num_cells = *leaf_node_num_cells(root_node);
   cursor->cell_num = num_cells;
@@ -246,23 +246,31 @@ void leaf_node_insert(Cursor* cursor, uint32_t key, Row* value)
     exit(EXIT_FAILURE);
   }
 
-  printf("almost there %d\n", num_cells);
   if (cursor->cell_num < num_cells)
   {
     // Make room for new cell
-    printf("Make room");
     for (uint32_t i = num_cells; i > cursor->cell_num; i--)
     {
       memcpy(leaf_node_cell(node, i), leaf_node_cell(node, i - 1), LEAF_NODE_CELL_SIZE);
     }
 
-    *(leaf_node_num_cells(node)) += 1;
-    *(leaf_node_key(node, cursor->cell_num)) = key;
-
-    serialize_row(value, leaf_node_value(node, cursor-> cell_num));
-
   }
+  *(leaf_node_num_cells(node)) += 1;
+  *(leaf_node_key(node, cursor->cell_num)) = key;
 
+  serialize_row(value, leaf_node_value(node, cursor-> cell_num));
+
+}
+
+void print_leaf_node(void* node)
+{
+  uint32_t num_cells = *leaf_node_num_cells(node);
+  printf("Leaf (size %d)\n", num_cells);
+  for (uint32_t i = 0; i < num_cells; i++)
+  {
+    uint32_t key = *leaf_node_key(node, i);
+    printf(" - %d: %d", i, key);
+  }
 }
 
 #endif
