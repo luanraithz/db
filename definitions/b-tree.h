@@ -44,6 +44,13 @@ typedef enum {
 #define LEAF_NODE_SPACE_FOR_CELLS ( PAGE_SIZE - LEAF_NODE_HEADER_SIZE )
 #define LEAF_NODE_MAX_CELLS ( LEAF_NODE_SPACE_FOR_CELLS / LEAF_NODE_CELL_SIZE )
 
+void set_node_type(void* node, NodeType type)
+{
+  uint8_t value = type;
+  *((uint8_t*)(node + NODE_TYPE_OFFSET)) = value;
+
+}
+
 uint32_t* leaf_node_num_cells(void* node)
 {
   return node + LEAF_NODE_NUM_CELLS_OFFSET;
@@ -65,6 +72,7 @@ void* leaf_node_value(void* node, uint32_t cell_num)
 }
 
 void initialize_leaf_node(void* node){
+  set_node_type(node, NODE_LEAF);
   *leaf_node_num_cells(node) = 0;
 }
 

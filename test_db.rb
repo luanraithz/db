@@ -1,8 +1,14 @@
+require "rspec/expectations"
+
 describe 'database' do
   def clear_db()
     if (File.exists?("test_db.db"))
       File.delete("test_db.db")
     end
+  end
+
+  before(:each) do 
+    clear_db()
   end
   def run_script(commands)
     raw_output = nil
@@ -20,7 +26,6 @@ describe 'database' do
   end
 
   it 'inserts and retreives a row' do
-    clear_db();
     result = run_script([
       "insert 1 user1 person1@example.com",
       "select",
@@ -36,7 +41,6 @@ describe 'database' do
   end
 
   it 'prints error message when table is full' do
-    clear_db();
     script = (1..1401).map do |i|
       "insert #{i} user #{i} person#{i}@example.com"
     end
@@ -47,7 +51,6 @@ describe 'database' do
   end
 
   it 'allows inserting strings that are the maximum length' do
-    clear_db();
     long_username = "a"*32
     long_email = "a"*255
     script = [
@@ -66,7 +69,6 @@ describe 'database' do
   end
 
   it 'doesn\'t allow inserting email with more than the maximum length' do
-    clear_db();
     long_email = "a"*300
     script = [
       "insert 1 a #{long_email}",
@@ -83,7 +85,6 @@ describe 'database' do
   end
 
   it 'keeps data after closing the programm' do 
-    clear_db();
     result1 = run_script([
       "insert 1 user1 user1@gmail.com",
       ".exit"
@@ -107,13 +108,11 @@ describe 'database' do
   end
 
   it 'allows printing out the structure of a one-node btree' do
-    clear_db()
-    script = [3,1, 2].map do |i|
+    script = [3, 1, 2].map do |i|
       "insert #{i} user#{i} person#{i}@example.com"
     end
     script << ".btree"
     script << ".exit"
-    print(script)
 
     result = run_script(script)
 
@@ -123,15 +122,14 @@ describe 'database' do
       "db > Executed.",
       "db > Tree: ",
       "Leaf (size 3)",
-      " - 0 : 3",
-      " - 1 : 1",
-      " - 2 : 2",
+      " - 0 : 1",
+      " - 1 : 2",
+      " - 2 : 3",
       "db > ",
     ])
   end
 
   it 'prints constants' do
-    clear_db()
     script = [
       ".constants",
       ".exit"
@@ -149,6 +147,26 @@ describe 'database' do
       "LEAF_NODE_MAX_CELLS: 13",
       "db > "
     ])
-    
+
+  end
+
+  it 'prints an error message if there is a duplicate id' do
+    script = [
+      "insert 1 user1 person1@example.com",
+      "insert 1 user1 person1@example.com",
+      "select",
+      ".exit"
+    ]
+
+    result = run_script(script)
+
+    expect(result).to match_array([
+      "db > Executed.",
+      "db > Error: Duplicate key.",
+      "db > (1, user1, person1@example.com)",
+      "Executed.",
+      "db > "
+    ])
+
   end
 end
